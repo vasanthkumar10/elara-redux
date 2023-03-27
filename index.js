@@ -28,7 +28,12 @@
 // 3. To specify how the state is going to change, always use reducer
 
 const redux = require("redux");
+const reduxLogger = require("redux-logger");
+
 const createStore = redux.createStore;
+const combineReducers = redux.combineReducers;
+const applyMiddleware = redux.applyMiddleware;
+const logger = reduxLogger.createLogger();
 
 const BUY_CAR = "BUY_CAR";
 const SELL_CAR = "SELL_CAR";
@@ -76,13 +81,21 @@ function sellBike(num = 1) {
 }
 
 // initial state
-const initialState = {
+// const initialState = {
+//   noOfCars: 10,
+//   noOfBikes: 20,
+// };
+
+const initialCarState = {
   noOfCars: 10,
+};
+
+const initialBikeState = {
   noOfBikes: 20,
 };
 
 // reducer
-const carReducer = (state = initialState, action) => {
+const carReducer = (state = initialCarState, action) => {
   switch (action.type) {
     case BUY_CAR:
       return { ...state, noOfCars: state.noOfCars - 1 };
@@ -90,6 +103,13 @@ const carReducer = (state = initialState, action) => {
     case SELL_CAR:
       return { ...state, noOfCars: state.noOfCars + action.quantity };
 
+    default:
+      return state;
+  }
+};
+
+const bikeReducer = (state = initialBikeState, action) => {
+  switch (action.type) {
     case BUY_BIKE:
       return { ...state, noOfBikes: state.noOfBikes - 1 };
 
@@ -101,16 +121,24 @@ const carReducer = (state = initialState, action) => {
   }
 };
 
-// store
-const store = createStore(carReducer);
-console.log("Initial state", store.getState());
-const unsubscribe = store.subscribe(() =>
-  console.log(
-    "The store is getting updated. The new state is --> ",
-    store.getState()
-  )
-);
+const rootReducer = combineReducers({
+  cars: carReducer,
+  bikes: bikeReducer,
+});
 
+// store
+const store = createStore(rootReducer, applyMiddleware(logger));
+console.log("Initial state", store.getState());
+// const unsubscribe = store.subscribe(() =>
+//   console.log(
+//     "The store is getting updated. The new state is --> ",
+//     store.getState()
+//   )
+// );
+
+store.subscribe(() => {});
+
+// components
 store.dispatch(buyCar());
 store.dispatch(buyCar());
 
@@ -120,7 +148,6 @@ store.dispatch(sellCar(5));
 store.dispatch(buyBike());
 store.dispatch(buyBike());
 
-unsubscribe();
+// unsubscribe();
 store.dispatch(sellBike());
 store.dispatch(sellBike(5));
-console.log(store.getState());
